@@ -52,3 +52,15 @@ jobs:
           POSTGRES_USER: cerrado_user
           POSTGRES_PASSWORD: test_pass
         run: pytest
+
+      - name: dbt deps (instala pacotes dbt)
+        run: cd dbt && dbt deps
+
+      - name: dbt compile (valida SQL dos modelos)
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: cerradowatch_test
+          POSTGRES_USER: cerrado_user
+          POSTGRES_PASSWORD: test_pass
+        run: cd dbt && dbt compile --profiles-dir . --target dev

@@ -1,0 +1,68 @@
+version: 2
+
+models:
+  - name: mart_fires_weekly
+    description: >
+      Série temporal semanal de focos de queimada no Cerrado.
+      Uma linha por semana — base do gráfico histórico e sistema de alertas.
+    columns:
+      - name: week_start
+        description: "Segunda-feira da semana (ISO week)."
+        tests: [unique, not_null]
+      - name: fire_count
+        tests: [not_null]
+      - name: year
+        tests: [not_null]
+      - name: week_number
+        tests: [not_null]
+      - name: avg_frp_mw
+        tests: [not_null]
+
+  - name: mart_deforestation_annual
+    description: >
+      Desmatamento anual por estado no Cerrado (PRODES/INPE), com variação YoY.
+      Inclui linha agregada 'BR_CERRADO' com total do bioma.
+    columns:
+      - name: year
+        tests: [not_null]
+      - name: state_code
+        tests: [not_null]
+      - name: area_km2
+        tests: [not_null]
+
+  - name: mart_climate_monthly
+    description: >
+      Médias mensais de temperatura, precipitação e umidade por estado.
+      Inclui flag de risco de seca (temperatura alta + sem chuva + umidade baixa).
+    columns:
+      - name: year_month
+        tests: [not_null]
+      - name: state_code
+        tests: [not_null]
+      - name: station_count
+        tests: [not_null]
+
+  - name: mart_prices_monthly
+    description: >
+      Preços mensais de soja, milho e algodão por estado — série histórica CONAB.
+      Usado para análise de correlação entre valorização das commodities e desmatamento.
+    columns:
+      - name: reference_month
+        tests: [not_null]
+      - name: product
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['soja', 'milho', 'algodao', 'sorgo', 'cana_de_acucar']
+      - name: state_code
+        tests: [not_null]
+
+  - name: mart_cerrado_kpis
+    description: >
+      Tabela de uma linha com os principais KPIs do Cerrado para o header do dashboard.
+      Combina queimadas (semana atual), desmatamento (ano atual) e preços de commodities.
+    columns:
+      - name: generated_at
+        tests: [not_null]
+      - name: latest_fire_week
+        tests: [not_null]
