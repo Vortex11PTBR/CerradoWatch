@@ -1,0 +1,1 @@
+"""Dashboard CerradoWatch — pacote principal."""
