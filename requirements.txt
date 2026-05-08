@@ -1,0 +1,15 @@
+# Dependências do dashboard CerradoWatch
+# Streamlit Community Cloud usa este arquivo para instalar pacotes
+
+streamlit>=1.32
+plotly>=5.20
+folium>=0.16
+streamlit-folium>=0.18
+pandas>=2.2
+sqlalchemy>=2.0
+psycopg2-binary>=2.9
+pydantic>=2.5
+pydantic-settings>=2.1
+python-dotenv>=1.0
+requests>=2.31
+loguru>=0.7
