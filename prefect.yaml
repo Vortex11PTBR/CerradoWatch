@@ -1,0 +1,32 @@
+# prefect.yaml — configuração de deployments para Prefect Cloud
+# Documentação: https://docs.prefect.io/latest/deploy/
+
+name: cerradowatch
+prefect-version: "2.*"
+
+# Build: sem imagem customizada para MVP (usa worker padrão)
+build: null
+
+push: null
+
+pull:
+  - prefect.deployments.steps.git_clone:
+      repository: https://github.com/Vortex11PTBR/CerradoWatch.git
+      branch: main
+
+deployments:
+  - name: weekly-fires
+    version: "1.0.0"
+    tags:
+      - cerradowatch
+      - fires
+      - production
+    description: "Pipeline semanal de queimadas do Cerrado — FIRMS/VIIRS"
+    entrypoint: orchestration/weekly_fires_flow.py:cerradowatch_weekly
+    work_pool:
+      name: default-agent-pool
+    schedule:
+      cron: "0 9 * * 1"          # Toda segunda-feira às 09:00 UTC (06:00 BRT)
+      timezone: "America/Sao_Paulo"
+    parameters:
+      days: 7
