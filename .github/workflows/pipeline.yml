@@ -1,0 +1,71 @@
+name: Pipeline Semanal
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'   # toda segunda-feira 09:00 UTC = 06:00 BRT
+  workflow_dispatch:        # execução manual pelo GitHub UI
+    inputs:
+      days_back:
+        description: 'Janela de dados em dias'
+        required: false
+        default: '7'
+
+jobs:
+  run-pipeline:
+    name: Ingestão de Dados + dbt
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: cerradowatch
+          POSTGRES_USER: cerrado_user
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'pipeline_pass' }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Instalar dependências
+        run: pip install -e ".[dev]" && pip install dbt-postgres openpyxl
+
+      - name: dbt deps
+        run: cd dbt && dbt deps
+
+      - name: Executar pipeline completo
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: "5432"
+          POSTGRES_DB: cerradowatch
+          POSTGRES_USER: cerrado_user
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'pipeline_pass' }}
+          FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          DAYS_BACK: ${{ github.event.inputs.days_back || '7' }}
+        run: python -m orchestration.run_pipeline
+
+      - name: Notificar sucesso
+        if: success()
+        run: |
+          echo "✅ Pipeline executado com sucesso em $(date -u '+%Y-%m-%d %H:%M UTC')"
+
+      - name: Notificar falha
+        if: failure()
+        run: |
+          echo "❌ Pipeline falhou em $(date -u '+%Y-%m-%d %H:%M UTC')"
+          echo "Verifique os logs acima para detalhes."

@@ -1,0 +1,33 @@
+# Dockerfile para o pipeline (worker/cron) — sem Streamlit
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libpq-dev \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir \
+        requests \
+        pandas \
+        python-dotenv \
+        pydantic \
+        pydantic-settings \
+        sqlalchemy \
+        psycopg2-binary \
+        loguru \
+        openpyxl \
+        dbt-postgres
+
+COPY ingestion/     ./ingestion/
+COPY orchestration/ ./orchestration/
+COPY dbt/           ./dbt/
+COPY data/          ./data/
+COPY scripts/       ./scripts/
+
+ENV PYTHONPATH=/app
+
+# Inicializa schemas e roda pipeline (sem Prefect — execução direta)
+CMD ["python", "-m", "orchestration.run_pipeline"]

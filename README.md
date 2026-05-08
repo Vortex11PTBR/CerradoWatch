@@ -2,7 +2,8 @@
 
 > Pipeline de monitoramento ambiental do Cerrado — dados públicos, infraestrutura real, impacto real.
 
-[![CI](https://github.com/joaolacerda/cerradowatch/actions/workflows/ci.yml/badge.svg)](https://github.com/joaolacerda/cerradowatch/actions)
+[![CI](https://github.com/Vortex11PTBR/CerradoWatch/actions/workflows/ci.yml/badge.svg)](https://github.com/Vortex11PTBR/CerradoWatch/actions)
+[![Pipeline](https://github.com/Vortex11PTBR/CerradoWatch/actions/workflows/pipeline.yml/badge.svg)](https://github.com/Vortex11PTBR/CerradoWatch/actions)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![dbt](https://img.shields.io/badge/dbt-postgres-orange.svg)](https://getdbt.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -25,12 +26,12 @@ Um **pipeline de dados de produção** que ingere, transforma e visualiza dados 
 ## Arquitetura
 
 ```
-[INPE/FIRMS] ─┐
+[INPE/FIRMS] ─┬
 [PRODES]      ├─► [Python Ingestion] ─► [PostgreSQL raw] ─► [dbt staging/mart] ─► [Streamlit]
-[INMET]       │                                                                      ▲
-[CONAB]      ─┘                          [Prefect Orchestration] ────────────────────┘
-                                                    │
-                                              [E-mail Alerts]
+[INMET]       |                                                                      (Render)
+[CONAB]      ─┘
+               [GitHub Actions cron — toda segunda 06:00 BRT]
+                    └─► pipeline completo + dbt run + alertas e-mail
 ```
 
 ## Stack
@@ -49,17 +50,41 @@ Um **pipeline de dados de produção** que ingere, transforma e visualiza dados 
 
 ```bash
 # 1. Clone e configure variáveis
-git clone https://github.com/joaolacerda/cerradowatch.git
-cd cerradowatch
+git clone https://github.com/Vortex11PTBR/CerradoWatch.git
+cd CerradoWatch
 cp .env.example .env  # edite com suas credenciais
 
-# 2. Suba o banco
-docker compose up -d postgres
+# 2. Suba o banco e inicialize
+make up
+make install
+make db-init
 
-# 3. Instale e rode o primeiro pipeline
-pip install -e ".[dev]"
-python -m ingestion.firms.connector
+# 3. Rode o primeiro pipeline e abra o dashboard
+make pipeline
+make dashboard
 ```
+
+## Deploy (Render)
+
+1. Faça fork do repositório
+2. No [Render Dashboard](https://render.com), clique em **New → Blueprint**
+3. Conecte o repositório — o `render.yaml` configura tudo automaticamente:
+   - Web service: Streamlit dashboard
+   - PostgreSQL: banco de dados gerenciado
+   - Cron job: pipeline semanal (toda segunda 06:00 BRT)
+4. Configure os secrets no painel do Render:
+   - `FIRMS_MAP_KEY` — obtenha em [firms.modaps.eosdis.nasa.gov](https://firms.modaps.eosdis.nasa.gov/api/area/)
+   - `SMTP_USER` / `SMTP_PASSWORD` — Gmail App Password para alertas
+   - `ALERT_EMAIL_TO` — e-mail de destino dos alertas
+
+## Pipeline Semanal (GitHub Actions)
+
+O pipeline também roda via GitHub Actions toda segunda-feira automaticamente.
+Para executar manualmente: **Actions → Pipeline Semanal → Run workflow**.
+
+Secrets necessários no repositório:
+- `FIRMS_MAP_KEY`
+- `SMTP_USER`, `SMTP_PASSWORD`, `ALERT_EMAIL_TO` (opcional — para alertas)
 
 ## Estrutura do Projeto
 

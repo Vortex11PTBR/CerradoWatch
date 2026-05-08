@@ -1,0 +1,107 @@
+# render.yaml — Infrastructure as Code para Render.com
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Deploy automático: conecte este repo no Render e ele lerá este arquivo.
+# Toda push para `main` triggera um novo deploy do dashboard.
+
+services:
+  # ── Dashboard Streamlit ────────────────────────────────────────────────────
+  - type: web
+    name: cerradowatch-dashboard
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    branch: main
+    autoDeployTrigger: commit
+
+    healthCheckPath: /_stcore/health
+
+    envVars:
+      # Credenciais do banco — injetadas pelo Render a partir do serviço abaixo
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: cerradowatch-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: cerradowatch-db
+          property: port
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: cerradowatch-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: cerradowatch-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: cerradowatch-db
+          property: password
+
+      # Variáveis da aplicação (configure no Render Dashboard após criar o serviço)
+      - key: FIRMS_MAP_KEY
+        sync: false       # valor secreto — preencher manualmente no Render
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: ALERT_EMAIL_TO
+        sync: false
+
+      # Streamlit config
+      - key: PYTHONPATH
+        value: /app
+      - key: STREAMLIT_SERVER_HEADLESS
+        value: "true"
+      - key: STREAMLIT_BROWSER_GATHER_USAGE_STATS
+        value: "false"
+
+  # ── Worker: pipeline semanal (cron job) ───────────────────────────────────
+  # NOTA: o pipeline também pode ser executado via GitHub Actions (ver
+  # .github/workflows/pipeline.yml). Para produção, use o cron do Render
+  # se quiser execução independente do GitHub.
+  - type: cron
+    name: cerradowatch-weekly-pipeline
+    runtime: docker
+    dockerfilePath: ./Dockerfile.pipeline
+    dockerContext: .
+    schedule: "0 9 * * 1"    # toda segunda 09:00 UTC = 06:00 BRT
+    envVars:
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: cerradowatch-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: cerradowatch-db
+          property: port
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: cerradowatch-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: cerradowatch-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: cerradowatch-db
+          property: password
+      - key: FIRMS_MAP_KEY
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: ALERT_EMAIL_TO
+        sync: false
+      - key: PYTHONPATH
+        value: /app
+
+databases:
+  # ── PostgreSQL 16 (free tier: 1GB, expira em 90 dias no plano gratuito) ───
+  - name: cerradowatch-db
+    databaseName: cerradowatch
+    user: cerrado_user
+    plan: free
