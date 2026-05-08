@@ -7,6 +7,37 @@ sources:
     tables:
       - name: firms_fire_events
         description: "Focos de queimada detectados pelo satélite VIIRS/SNPP via NASA FIRMS API."
+      - name: prodes_deforestation
+        description: "Incremento anual de desmatamento no Cerrado — INPE/PRODES via TerraBrasilis."
+        columns:
+          - name: id
+            tests: [unique, not_null]
+          - name: year
+            tests: [not_null]
+          - name: state
+            tests: [not_null]
+          - name: area_km2
+            tests: [not_null]
+      - name: inmet_daily_observations
+        description: "Observações meteorológicas diárias de estações automáticas do INMET no Cerrado."
+        columns:
+          - name: id
+            tests: [unique, not_null]
+          - name: station_code
+            tests: [not_null]
+          - name: measure_date
+            tests: [not_null]
+      - name: conab_agricultural_prices
+        description: "Preços agrícolas mensais (soja, milho, algodão) por estado — CONAB."
+        columns:
+          - name: id
+            tests: [unique, not_null]
+          - name: product
+            tests: [not_null]
+          - name: reference_date
+            tests: [not_null]
+          - name: state
+            tests: [not_null]
         columns:
           - name: id
             description: "Chave primária auto-incrementada."
@@ -73,3 +104,51 @@ models:
           - not_null
           - accepted_values:
               values: ['day', 'night']
+
+  - name: stg_prodes__deforestation
+    description: >
+      Incremento anual de desmatamento no Cerrado por estado e município.
+      Série histórica a partir de 2010, fonte INPE/PRODES via TerraBrasilis WFS.
+    columns:
+      - name: deforestation_id
+        tests: [unique, not_null]
+      - name: deforestation_year
+        tests: [not_null]
+      - name: state_code
+        tests: [not_null]
+      - name: area_km2
+        tests: [not_null]
+      - name: class_label
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Desmatamento', 'Regeneração', 'Outros']
+
+  - name: stg_inmet__observations
+    description: >
+      Observações meteorológicas diárias por estação do Cerrado.
+      Variáveis: temperatura (max/min/avg), precipitação, umidade, velocidade do vento.
+    columns:
+      - name: observation_id
+        tests: [unique, not_null]
+      - name: station_code
+        tests: [not_null]
+      - name: measure_date
+        tests: [not_null]
+
+  - name: stg_conab__prices
+    description: >
+      Preços mensais de commodities agrícolas (soja, milho, algodão) por estado.
+      Inclui preço por saca 60kg e conversão para tonelada.
+    columns:
+      - name: price_id
+        tests: [unique, not_null]
+      - name: product
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['soja', 'milho', 'algodao', 'sorgo', 'cana_de_acucar']
+      - name: reference_date
+        tests: [not_null]
+      - name: state_code
+        tests: [not_null]
