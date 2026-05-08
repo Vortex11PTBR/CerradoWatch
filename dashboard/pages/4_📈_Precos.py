@@ -1,4 +1,9 @@
 """Página 4 — Preços: commodities agrícolas e correlação com desmatamento."""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st

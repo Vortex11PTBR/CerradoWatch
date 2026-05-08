@@ -1,4 +1,9 @@
 """Página 1 — Queimadas: série histórica semanal + mapa de focos."""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 import folium
 import pandas as pd
 import plotly.express as px

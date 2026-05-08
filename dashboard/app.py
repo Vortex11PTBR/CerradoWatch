@@ -1,4 +1,10 @@
 """Página principal — CerradoWatch Dashboard."""
+import sys
+from pathlib import Path
+
+# Garante que o repo root está no sys.path (necessário no Streamlit Cloud)
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import streamlit as st
 
 st.set_page_config(
