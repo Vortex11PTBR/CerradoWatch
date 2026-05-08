@@ -1,0 +1,62 @@
+[project]
+name = "cerradowatch"
+version = "0.1.0"
+description = "Pipeline de monitoramento ambiental do Cerrado com dados públicos do INPE, IBGE, INMET e CONAB"
+requires-python = ">=3.11"
+
+[project.dependencies]
+# HTTP e dados
+requests = ">=2.31"
+pandas = ">=2.2"
+polars = ">=0.20"
+python-dotenv = ">=1.0"
+pydantic = ">=2.5"
+pydantic-settings = ">=2.1"
+
+# Banco de dados
+sqlalchemy = ">=2.0"
+psycopg2-binary = ">=2.9"
+alembic = ">=1.13"
+
+# Orquestração
+prefect = ">=2.16"
+
+# Qualidade e log
+loguru = ">=0.7"
+
+# Dashboard
+streamlit = ">=1.32"
+plotly = ">=5.20"
+folium = ">=0.16"
+streamlit-folium = ">=0.18"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=4.1",
+  "ruff>=0.3",
+  "mypy>=1.8",
+  "types-requests>=2.31",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=ingestion --cov-report=term-missing --cov-fail-under=70"

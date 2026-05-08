@@ -1,0 +1,34 @@
+name: cerradowatch
+version: '1.0.0'
+config-version: 2
+
+profile: cerradowatch
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  cerradowatch:
+    staging:
+      +schema: staging
+      +materialized: view
+    mart:
+      +schema: mart
+      +materialized: table
+
+vars:
+  cerrado_states:
+    - "GO"   # Goiás
+    - "MT"   # Mato Grosso
+    - "MS"   # Mato Grosso do Sul
+    - "MG"   # Minas Gerais
+    - "BA"   # Bahia
+    - "TO"   # Tocantins
+    - "SP"   # São Paulo
+    - "PR"   # Paraná
+    - "PI"   # Piauí
+    - "MA"   # Maranhão
+    - "DF"   # Distrito Federal
