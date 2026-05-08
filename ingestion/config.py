@@ -10,7 +10,11 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
 
-    # Banco de dados
+    # URL completa do banco (prioridade — usada pelo Neon/Render/Railway)
+    # Ex: postgresql://user:pass@host/db?sslmode=require
+    database_url: str = ""
+
+    # Variáveis individuais (fallback para desenvolvimento local)
     postgres_host: str = "localhost"
     postgres_port: int = 5432
     postgres_db: str = "cerradowatch"
@@ -33,7 +37,13 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     @property
-    def database_url(self) -> str:
+    def db_url(self) -> str:
+        """Retorna a URL do banco com driver psycopg2."""
+        if self.database_url:
+            # Neon/Railway/Render fornecem postgresql://, SQLAlchemy precisa do driver
+            return self.database_url.replace(
+                "postgresql://", "postgresql+psycopg2://", 1
+            )
         return (
             f"postgresql+psycopg2://{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"

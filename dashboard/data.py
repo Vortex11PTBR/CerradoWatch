@@ -29,7 +29,13 @@ def get_engine():
         db = os.getenv("POSTGRES_DB", "cerradowatch")
         user = os.getenv("POSTGRES_USER", "cerrado_user")
         password = os.getenv("POSTGRES_PASSWORD", "")
-        url = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}"
+
+        raw_url = os.getenv("DATABASE_URL", "")
+        if raw_url:
+            # Neon/Render fornecem postgresql://, SQLAlchemy precisa do driver
+            url = raw_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        else:
+            url = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}"
 
         engine = create_engine(url, pool_pre_ping=True, pool_size=2)
         with engine.connect() as conn:

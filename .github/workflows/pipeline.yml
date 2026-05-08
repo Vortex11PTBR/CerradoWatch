@@ -15,21 +15,6 @@ jobs:
     name: Ingestão de Dados + dbt
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: cerradowatch
-          POSTGRES_USER: cerrado_user
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'pipeline_pass' }}
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
 
@@ -45,13 +30,33 @@ jobs:
       - name: dbt deps
         run: cd dbt && dbt deps
 
+      - name: Parsear DATABASE_URL para variáveis individuais do dbt
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python - <<'EOF'
+          import os, urllib.parse
+          url = os.environ.get("DATABASE_URL", "")
+          if not url:
+              print("DATABASE_URL não configurada — abortando")
+              raise SystemExit(1)
+          p = urllib.parse.urlparse(url)
+          qs = urllib.parse.parse_qs(p.query)
+          sslmode = qs.get("sslmode", ["require"])[0]
+          env_file = os.environ["GITHUB_ENV"]
+          with open(env_file, "a") as f:
+              f.write(f"POSTGRES_HOST={p.hostname}\n")
+              f.write(f"POSTGRES_PORT={p.port or 5432}\n")
+              f.write(f"POSTGRES_DB={p.path.lstrip('/')}\n")
+              f.write(f"POSTGRES_USER={p.username}\n")
+              f.write(f"POSTGRES_PASSWORD={p.password}\n")
+              f.write(f"POSTGRES_SSLMODE={sslmode}\n")
+          print(f"✅ Vars configuradas para host={p.hostname}")
+          EOF
+
       - name: Executar pipeline completo
         env:
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: "5432"
-          POSTGRES_DB: cerradowatch
-          POSTGRES_USER: cerrado_user
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'pipeline_pass' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
@@ -61,8 +66,7 @@ jobs:
 
       - name: Notificar sucesso
         if: success()
-        run: |
-          echo "✅ Pipeline executado com sucesso em $(date -u '+%Y-%m-%d %H:%M UTC')"
+        run: echo "✅ Pipeline executado com sucesso em $(date -u '+%Y-%m-%d %H:%M UTC')"
 
       - name: Notificar falha
         if: failure()
