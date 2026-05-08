@@ -1,0 +1,75 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: "Dados brutos carregados pelos conectores Python — nunca modificar manualmente."
+    tables:
+      - name: firms_fire_events
+        description: "Focos de queimada detectados pelo satélite VIIRS/SNPP via NASA FIRMS API."
+        columns:
+          - name: id
+            description: "Chave primária auto-incrementada."
+            tests:
+              - unique
+              - not_null
+          - name: acq_date
+            description: "Data de aquisição da imagem."
+            tests:
+              - not_null
+          - name: latitude
+            tests:
+              - not_null
+          - name: longitude
+            tests:
+              - not_null
+          - name: frp
+            description: "Fire Radiative Power em megawatts."
+            tests:
+              - not_null
+          - name: confidence
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['l', 'n', 'h']
+          - name: daynight
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['D', 'N']
+
+models:
+  - name: stg_firms__fires
+    description: >
+      Focos de queimada limpos e tipificados. Cada linha é uma detecção única de calor
+      pelo satélite VIIRS no polígono do Cerrado. Confiança 'nominal' ou 'high' são
+      considerados focos válidos para análise.
+    columns:
+      - name: fire_id
+        description: "Chave primária herdada do raw."
+        tests:
+          - unique
+          - not_null
+      - name: latitude
+        tests:
+          - not_null
+      - name: longitude
+        tests:
+          - not_null
+      - name: acquired_date
+        tests:
+          - not_null
+      - name: fire_radiative_power_mw
+        description: "FRP em megawatts. Valores > 100 MW indicam focos extremamente intensos."
+        tests:
+          - not_null
+      - name: detection_confidence
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['low', 'nominal', 'high']
+      - name: day_or_night
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['day', 'night']

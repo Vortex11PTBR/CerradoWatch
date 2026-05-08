@@ -1,14 +1,21 @@
 """Configurações centrais do projeto via variáveis de ambiente."""
-from pydantic_settings import BaseSettings
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
+
     # Banco de dados
     postgres_host: str = "localhost"
     postgres_port: int = 5432
     postgres_db: str = "cerradowatch"
     postgres_user: str = "cerrado_user"
-    postgres_password: str
+    postgres_password: str = Field(default="")
 
     # FIRMS / INPE
     firms_map_key: str = ""
@@ -32,9 +39,5 @@ class Settings(BaseSettings):
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
         )
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
 
-
-settings = Settings()  # type: ignore[call-arg]
+settings = Settings()
