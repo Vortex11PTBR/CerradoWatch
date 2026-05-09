@@ -14,19 +14,33 @@ Ordem de execução:
 """
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
+import urllib.parse
 from datetime import date, timedelta
 
 from loguru import logger
 from sqlalchemy import func, select, text
 
-from ingestion.config import settings
-from ingestion.database import SessionLocal, engine
-from ingestion.firms.connector import ensure_table, fetch_fires, upsert_fires
-from ingestion.firms.models import FirmsFireEvent
-from orchestration.alerts import FireAlertPayload, send_fire_alert
+# ── Resolve DATABASE_URL → variáveis individuais (para dbt e settings) ────────
+_db_url = os.environ.get("DATABASE_URL", "")
+if _db_url:
+    _p = urllib.parse.urlparse(_db_url)
+    _qs = urllib.parse.parse_qs(_p.query)
+    os.environ.setdefault("POSTGRES_HOST", _p.hostname or "localhost")
+    os.environ.setdefault("POSTGRES_PORT", str(_p.port or 5432))
+    os.environ.setdefault("POSTGRES_DB", _p.path.lstrip("/"))
+    os.environ.setdefault("POSTGRES_USER", _p.username or "")
+    os.environ.setdefault("POSTGRES_PASSWORD", _p.password or "")
+    os.environ.setdefault("POSTGRES_SSLMODE", _qs.get("sslmode", ["require"])[0])
+    logger.info(f"DATABASE_URL resolvida: host={_p.hostname} db={_p.path.lstrip('/')}")
 
+from ingestion.config import settings  # noqa: E402 (após setar env vars)
+from ingestion.database import SessionLocal, engine  # noqa: E402
+from ingestion.firms.connector import ensure_table, fetch_fires, upsert_fires  # noqa: E402
+from ingestion.firms.models import FirmsFireEvent  # noqa: E402
+from orchestration.alerts import FireAlertPayload, send_fire_alert  # noqa: E402
 
 def init_db() -> None:
     """Cria schemas raw/staging/mart e todas as tabelas ORM."""

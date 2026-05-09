@@ -30,11 +30,6 @@ jobs:
       - name: dbt deps
         run: cd dbt && dbt deps
 
-      - name: Parsear DATABASE_URL para variáveis individuais do dbt
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: python scripts/parse_db_url.py
-
       - name: Executar pipeline completo
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
