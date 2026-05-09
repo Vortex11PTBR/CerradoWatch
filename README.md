@@ -8,6 +8,8 @@
 [![dbt](https://img.shields.io/badge/dbt-postgres-orange.svg)](https://getdbt.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+🚀 **[Dashboard ao vivo → cerradowatch-g6wx9wwwr6mwydqvjwzyue.streamlit.app](https://cerradowatch-g6wx9wwwr6mwydqvjwzyue.streamlit.app)**
+
 ## O Problema
 
 O Cerrado é o **segundo maior bioma do Brasil**, responsável por **70% da água doce** do país. Está sendo destruído mais rapidamente que a Amazônia — mas tem dez vezes menos visibilidade. Os dados de queimadas, desmatamento e impacto climático existem e são públicos (INPE, INMET, CONAB), mas estão dispersos, sujos e inacessíveis para quem não é cientista de dados.
@@ -38,13 +40,13 @@ Um **pipeline de dados de produção** que ingere, transforma e visualiza dados 
 
 | Camada | Tecnologia |
 |--------|-----------|
-| Ingestão | Python 3.11, Pandas/Polars, requests |
-| Warehouse | PostgreSQL 16 |
+| Ingestão | Python 3.11, requests, Pydantic |
+| Warehouse | PostgreSQL (Neon.tech serverless) |
 | Transformação | dbt-core + dbt-postgres |
-| Orquestração | Prefect 2 |
+| Orquestração | GitHub Actions (cron semanal) |
 | Visualização | Streamlit + Plotly + Folium |
 | CI/CD | GitHub Actions |
-| Deploy | Render |
+| Deploy | Streamlit Community Cloud + Neon |
 
 ## Setup em 3 comandos
 
@@ -64,45 +66,34 @@ make pipeline
 make dashboard
 ```
 
-## Deploy (Render)
+## Deploy gratuito (sem cartão de crédito)
 
-1. Faça fork do repositório
-2. No [Render Dashboard](https://render.com), clique em **New → Blueprint**
-3. Conecte o repositório — o `render.yaml` configura tudo automaticamente:
-   - Web service: Streamlit dashboard
-   - PostgreSQL: banco de dados gerenciado
-   - Cron job: pipeline semanal (toda segunda 06:00 BRT)
-4. Configure os secrets no painel do Render:
-   - `FIRMS_MAP_KEY` — obtenha em [firms.modaps.eosdis.nasa.gov](https://firms.modaps.eosdis.nasa.gov/api/area/)
-   - `SMTP_USER` / `SMTP_PASSWORD` — Gmail App Password para alertas
-   - `ALERT_EMAIL_TO` — e-mail de destino dos alertas
+1. **Banco de dados:** crie conta em [neon.tech](https://neon.tech) → novo projeto → copie a connection string
+2. **Dashboard:** faça deploy em [share.streamlit.io](https://share.streamlit.io) → conecte o repo → main file: `dashboard/app.py`
+3. **Pipeline:** configure os secrets no GitHub (`DATABASE_URL`, `FIRMS_MAP_KEY`) → Actions → Pipeline Semanal
 
-## Pipeline Semanal (GitHub Actions)
-
-O pipeline também roda via GitHub Actions toda segunda-feira automaticamente.
-Para executar manualmente: **Actions → Pipeline Semanal → Run workflow**.
-
-Secrets necessários no repositório:
-- `FIRMS_MAP_KEY`
-- `SMTP_USER`, `SMTP_PASSWORD`, `ALERT_EMAIL_TO` (opcional — para alertas)
+Secrets necessários:
+- `DATABASE_URL` — connection string PostgreSQL (ex.: Neon)
+- `FIRMS_MAP_KEY` — obtenha em [firms.modaps.eosdis.nasa.gov](https://firms.modaps.eosdis.nasa.gov/api/area/)
+- `SMTP_USER`, `SMTP_PASSWORD`, `ALERT_EMAIL_TO` — opcional, para alertas por e-mail
 
 ## Estrutura do Projeto
 
 ```
 cerradowatch/
 ├── ingestion/          # Conectores para cada fonte de dados
-│   ├── firms/          # Queimadas (INPE/NASA FIRMS)
+│   ├── firms/          # Queimadas (NASA FIRMS)
 │   ├── prodes/         # Desmatamento (INPE PRODES)
-│   ├── inmet/          # Dados climáticos
-│   └── conab/          # Preços agrícolas
+│   ├── inmet/          # Dados climáticos (INMET)
+│   └── conab/          # Preços agrícolas (CONAB)
 ├── dbt/                # Modelos de transformação
 │   ├── models/
 │   │   ├── staging/    # Limpeza e tipagem dos dados brutos
 │   │   └── mart/       # Tabelas analíticas finais
 │   └── tests/          # Testes de qualidade de dados
 ├── dashboard/          # Aplicação Streamlit
-├── orchestration/      # Flows Prefect
-├── scripts/            # SQL de inicialização
+│   └── pages/          # 🔥 Queimadas · 🌳 Desmatamento · 🌡️ Clima · 📈 Preços · ℹ️ Sobre
+├── orchestration/      # Pipeline runner + alertas
 └── docs/adr/           # Architecture Decision Records
 ```
 
@@ -116,4 +107,4 @@ Usuários reais: jornalistas de dados, ONGs ambientais, pesquisadores universit�
 
 ---
 
-Desenvolvido por [João Lacerda](https://joaolacerda.dev) · Dados: INPE, INMET, CONAB (domínio público)
+Desenvolvido por [João Lacerda](https://joaolacerda.dev) · Dados: INPE, INMET, CONAB, NASA FIRMS (domínio público)

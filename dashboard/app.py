@@ -47,7 +47,7 @@ st.markdown("""
 with st.sidebar:
     st.image(
         "https://img.shields.io/badge/CerradoWatch-v1.0-4ade80?style=for-the-badge",
-        use_column_width=True,
+        use_container_width=True,
     )
     st.markdown("### 🌿 CerradoWatch")
     st.markdown("""
@@ -63,7 +63,7 @@ Plataforma de monitoramento ambiental do Cerrado com **dados abertos do governo 
 """)
     st.divider()
     st.caption("Dados: INPE · INMET · CONAB · NASA FIRMS")
-    st.caption("Pipeline: Python · dbt · PostgreSQL · Prefect")
+    st.caption("Pipeline: Python · dbt · PostgreSQL · GitHub Actions")
 
 
 # ---------------------------------------------------------------------------
