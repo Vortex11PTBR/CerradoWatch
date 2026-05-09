@@ -120,6 +120,9 @@ def _sample_fires_weekly() -> pd.DataFrame:
         "week_start": weeks,
         "fire_count": counts,
         "high_confidence_count": [int(c * 0.35) for c in counts],
+        "nominal_confidence_count": [int(c * 0.45) for c in counts],
+        "day_fires": [int(c * 0.65) for c in counts],
+        "night_fires": [int(c * 0.35) for c in counts],
         "avg_frp_mw": [round(c * 0.14, 1) for c in counts],
         "total_frp_mw": [round(c * 14.2, 1) for c in counts],
         "alert_threshold_exceeded": [c >= 1000 for c in counts],
@@ -206,6 +209,7 @@ def _sample_deforestation() -> pd.DataFrame:
         rows.append({"year": year, "state_code": "BR_CERRADO", "area_km2": round(total, 1)})
     df = pd.DataFrame(rows)
     df["yoy_change_pct"] = df.groupby("state_code")["area_km2"].pct_change() * 100
+    df["prev_year_area_km2"] = df.groupby("state_code")["area_km2"].shift(1)
     df["rank_within_year"] = df[df["state_code"] != "BR_CERRADO"].groupby("year")["area_km2"].rank(ascending=False)
     return df
 
@@ -238,11 +242,12 @@ def load_climate(state: Optional[str] = None) -> pd.DataFrame:
 
 def _sample_climate(state: Optional[str] = None) -> pd.DataFrame:
     import numpy as np
-    rng = np.random.default_rng(3)
     states = [state] if state else ["GO", "MT", "MS"]
     months = pd.date_range("2024-01-01", periods=16, freq="MS")
     rows = []
     for s in states:
+        # Semente única por estado — dados diferentes por estado
+        rng = np.random.default_rng(abs(hash(s)) % (2 ** 31))
         for m in months:
             month_n = m.month
             # Sazonalidade do Cerrado: seco (abr-set), chuvoso (out-mar)
@@ -292,22 +297,24 @@ def load_prices(product: Optional[str] = None) -> pd.DataFrame:
 def _sample_prices(product: Optional[str] = None) -> pd.DataFrame:
     import numpy as np
     rng = np.random.default_rng(5)
-    products = [product] if product else ["soja", "milho"]
+    products = [product] if product else ["soja", "milho", "algodao"]
+    states = ["GO", "MT", "MS", "MG", "BA"]
     months = pd.date_range("2022-01-01", periods=40, freq="MS")
     base_price = {"soja": 140, "milho": 58, "algodao": 120}
     rows = []
     for p in products:
-        price = base_price.get(p, 100)
-        for m in months:
-            price = max(50, price * (1 + rng.normal(0, 0.03)))
-            rows.append({
-                "reference_month": m,
-                "product": p,
-                "state_code": "GO",
-                "year": m.year,
-                "month": m.month,
-                "avg_price_per_sack_brl": round(price, 2),
-                "avg_price_per_ton_brl": round(price * 1000 / 60, 2),
-                "mom_change_pct": round(rng.normal(0, 3), 1),
-            })
+        for st in states:
+            price = base_price.get(p, 100) * np.random.default_rng(abs(hash(st + p)) % 2**31).uniform(0.9, 1.1)
+            for m in months:
+                price = max(50, price * (1 + rng.normal(0, 0.03)))
+                rows.append({
+                    "reference_month": m,
+                    "product": p,
+                    "state_code": st,
+                    "year": m.year,
+                    "month": m.month,
+                    "avg_price_per_sack_brl": round(price, 2),
+                    "avg_price_per_ton_brl": round(price * 1000 / 60, 2),
+                    "mom_change_pct": round(rng.normal(0, 3), 1),
+                })
     return pd.DataFrame(rows)

@@ -80,12 +80,15 @@ k = kpis.iloc[0]
 # ---------------------------------------------------------------------------
 
 if k.get("fire_alert_active"):
-    st.markdown("""
+    col_alert, col_link = st.columns([5, 1])
+    with col_alert:
+        st.markdown("""
 <div class="alert-banner">
 ⚠️ <strong>ALERTA DE QUEIMADAS ATIVO</strong> — Volume semanal de focos acima do threshold.
-Verifique a aba <strong>🔥 Queimadas</strong> para detalhes.
 </div>
 """, unsafe_allow_html=True)
+    with col_link:
+        st.page_link("pages/1_🔥_Queimadas.py", label="Ver Queimadas", icon="🔥")
 
 # ---------------------------------------------------------------------------
 # Header

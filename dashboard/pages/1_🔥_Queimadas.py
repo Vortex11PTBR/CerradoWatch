@@ -26,7 +26,7 @@ st.markdown(
 # Filtros
 # ---------------------------------------------------------------------------
 
-col_f1, col_f2 = st.columns([2, 1])
+col_f1, _ = st.columns([2, 1])
 with col_f1:
     df_weekly = load_fires_weekly()
     if not df_weekly.empty and "week_start" in df_weekly.columns:
@@ -46,10 +46,6 @@ with col_f1:
         ]
     else:
         df_filtered = df_weekly
-
-with col_f2:
-    map_days = st.selectbox("Mapa — focos dos últimos", [7, 14, 30, 90], index=2)
-    map_days = int(map_days)
 
 st.divider()
 
@@ -181,7 +177,12 @@ st.divider()
 # Mapa de focos
 # ---------------------------------------------------------------------------
 
-st.subheader(f"🗺️ Mapa de focos — últimos {map_days} dias")
+col_map_hdr, col_map_sel = st.columns([3, 1])
+with col_map_hdr:
+    st.subheader("🗺️ Mapa de focos de calor")
+with col_map_sel:
+    map_days = st.selectbox("Focos dos últimos", [7, 14, 30, 90], index=2, label_visibility="visible")
+    map_days = int(map_days)
 
 df_raw = load_fires_raw(days=map_days)
 
@@ -235,7 +236,17 @@ else:
 
 with st.expander("📋 Ver dados brutos"):
     if not df_raw.empty:
-        st.dataframe(
-            df_raw.sort_values("frp", ascending=False).head(200),
-            use_container_width=True,
-        )
+        _col_rename = {
+            "latitude": "Latitude", "longitude": "Longitude",
+            "frp": "FRP (MW)", "confidence": "Confiança",
+            "acq_date": "Data detecção", "daynight": "Dia/Noite",
+        }
+        _conf_map = {"h": "Alta", "n": "Nominal", "l": "Baixa"}
+        _dn_map = {"D": "Dia", "N": "Noite"}
+        df_display = df_raw.sort_values("frp", ascending=False).head(200).copy()
+        if "confidence" in df_display.columns:
+            df_display["confidence"] = df_display["confidence"].map(_conf_map).fillna(df_display["confidence"])
+        if "daynight" in df_display.columns:
+            df_display["daynight"] = df_display["daynight"].map(_dn_map).fillna(df_display["daynight"])
+        df_display = df_display.rename(columns=_col_rename)
+        st.dataframe(df_display, use_container_width=True)

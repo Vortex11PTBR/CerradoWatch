@@ -53,7 +53,6 @@ st.divider()
 # ---------------------------------------------------------------------------
 
 total_year = df_total[df_total["year"] == selected_year]["area_km2"].values
-total_prev = df_total[df_total["year"] == selected_year]["prev_year_area_km2"].values
 yoy = df_total[df_total["year"] == selected_year]["yoy_change_pct"].values
 
 m1, m2, m3, m4 = st.columns(4)

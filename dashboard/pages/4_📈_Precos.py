@@ -168,12 +168,12 @@ with col2:
         corr_df = pd.merge(soja_annual, defor_annual, on="year", how="inner")
 
         if len(corr_df) >= 3:
+            import numpy as np
             fig_corr = px.scatter(
                 corr_df,
                 x="avg_soja_price",
                 y="area_km2",
                 text="year",
-                trendline="ols",
                 labels={
                     "avg_soja_price": "Preço médio soja (R$/sc)",
                     "area_km2": "Desmatamento (km²)",
@@ -184,6 +184,14 @@ with col2:
                 textposition="top center",
                 selector=dict(mode="markers+text"),
             )
+            # Linha de tendência manual (evita dependência de statsmodels)
+            z = np.polyfit(corr_df["avg_soja_price"], corr_df["area_km2"], 1)
+            x_line = np.linspace(corr_df["avg_soja_price"].min(), corr_df["avg_soja_price"].max(), 50)
+            fig_corr.add_trace(go.Scatter(
+                x=x_line, y=np.poly1d(z)(x_line),
+                mode="lines", name="Tendência",
+                line=dict(color="#f97316", dash="dash", width=1.5),
+            ))
             fig_corr.update_layout(
                 template="plotly_dark",
                 height=380,
