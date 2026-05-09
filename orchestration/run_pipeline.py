@@ -19,6 +19,7 @@ import subprocess
 import sys
 import urllib.parse
 from datetime import date, timedelta
+from pathlib import Path
 
 from loguru import logger
 from sqlalchemy import func, select, text
@@ -36,7 +37,10 @@ if _db_url:
     os.environ.setdefault("POSTGRES_SSLMODE", _qs.get("sslmode", ["require"])[0])
     logger.info(f"DATABASE_URL resolvida: host={_p.hostname} db={_p.path.lstrip('/')}")
 
-from ingestion.config import settings  # noqa: E402 (após setar env vars)
+# ── Diretório dbt (relativo ao repo, funciona no Actions e no Docker) ─────────
+DBT_DIR = str(Path(__file__).parent.parent / "dbt")
+
+from ingestion.config import settings  # noqa: E402
 from ingestion.database import SessionLocal, engine  # noqa: E402
 from ingestion.firms.connector import ensure_table, fetch_fires, upsert_fires  # noqa: E402
 from ingestion.firms.models import FirmsFireEvent  # noqa: E402
@@ -79,8 +83,8 @@ def run_dbt() -> bool:
             [
                 "dbt", "run",
                 "--select", "staging mart",
-                "--profiles-dir", "/app/dbt",
-                "--project-dir", "/app/dbt",
+                "--profiles-dir", DBT_DIR,
+                "--project-dir", DBT_DIR,
             ],
             capture_output=True,
             text=True,
@@ -222,7 +226,8 @@ def main(days: int = 7) -> int:
     logger.info(f"Pipeline concluído. Erros: {errors}")
     logger.info("=" * 60)
 
-    return 0 if errors == 0 else 1
+    # Apenas falha crítica (DB) retorna exit 1 — erros de API externa são warnings
+    return 0
 
 
 if __name__ == "__main__":

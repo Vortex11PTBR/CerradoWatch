@@ -30,7 +30,8 @@ PRODUCT = "VIIRS_SNPP_NRT"
 
 def fetch_fires(days: int = 7) -> list[FirmsFireRecord]:
     """Consulta a API FIRMS e retorna focos de queimada nos últimos N dias."""
-    url = f"{FIRMS_BASE_URL}/{settings.firms_map_key}/{PRODUCT}/{CERRADO_BBOX}/{days}"
+    map_key = settings.firms_map_key.strip()  # remove newlines acidentais do secret
+    url = f"{FIRMS_BASE_URL}/{map_key}/{PRODUCT}/{CERRADO_BBOX}/{days}"
     logger.info(f"Consultando FIRMS API | produto={PRODUCT} | dias={days}")
 
     response = requests.get(url, timeout=60)
