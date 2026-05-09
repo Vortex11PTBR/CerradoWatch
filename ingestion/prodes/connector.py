@@ -42,8 +42,8 @@ def fetch_deforestation(start_year: int = 2010, end_year: int | None = None) -> 
         "request": "GetFeature",
         "typeName": "prodes-cerrado-nb:yearly_deforestation_biome",
         "outputFormat": "application/json",
-        "CQL_FILTER": f"year >= {start_year} AND year <= {end_year}",
-        "propertyName": "year,state,area_km",
+        "CQL_FILTER": f"year>={start_year} AND year<={end_year}",
+        # propertyName removido — causava 400 em alguns servidores WFS
     }
 
     logger.info(f"Consultando TerraBrasilis PRODES | anos {start_year}–{end_year}")

@@ -169,7 +169,8 @@ def run(days_back: int = 30, max_stations: int | None = None) -> int:
         stations = stations[:max_stations]
     upsert_stations(stations)
 
-    end_date = date.today() - timedelta(days=1)
+    # API tem latência de ~7 dias — usar dados de 8..8+days_back dias atrás
+    end_date = date.today() - timedelta(days=8)
     start_date = end_date - timedelta(days=days_back)
 
     total = 0

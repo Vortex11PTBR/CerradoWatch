@@ -190,10 +190,10 @@ def main(days: int = 7) -> int:
         log_run("prodes", 0, status="error", error=str(e))
         errors += 1
 
-    # 4. INMET
+    # 4. INMET (usa 30 dias para garantir dados disponíveis na API)
     try:
         from ingestion.inmet.connector import run as inmet_run
-        count = inmet_run(days_back=days)
+        count = inmet_run(days_back=30)
         log_run("inmet", count)
         logger.info(f"INMET: {count} registros ✅")
     except Exception as e:
