@@ -153,22 +153,25 @@ def load_fires_raw(days: int = 30) -> pd.DataFrame:
         )
         return df
     except Exception:
-        return _sample_fires_raw()
+        return _sample_fires_raw(days)
 
 
-def _sample_fires_raw() -> pd.DataFrame:
+def _sample_fires_raw(days: int = 30) -> pd.DataFrame:
     import numpy as np
     rng = np.random.default_rng(7)
-    n = 200
-    # Coordenadas dentro do Cerrado (bbox: lon -60 a -41, lat -24 a -2)
-    return pd.DataFrame({
+    n = 800  # pontos suficientes para cobrir até 90 dias
+    hours_back = rng.integers(1, 90 * 24, n)
+    dates = [date.today() - timedelta(hours=int(h)) for h in hours_back]
+    df = pd.DataFrame({
         "latitude": rng.uniform(-24, -2, n).round(4),
         "longitude": rng.uniform(-60, -41, n).round(4),
         "frp": rng.uniform(5, 250, n).round(1),
         "confidence": rng.choice(["h", "n", "l"], n, p=[0.35, 0.50, 0.15]),
-        "acq_date": pd.date_range(end=date.today(), periods=n, freq="3h").date,
+        "acq_date": dates,
         "daynight": rng.choice(["D", "N"], n, p=[0.7, 0.3]),
     })
+    cutoff = date.today() - timedelta(days=days)
+    return df[pd.to_datetime(df["acq_date"]) >= pd.Timestamp(cutoff)].reset_index(drop=True)
 
 
 # ---------------------------------------------------------------------------
@@ -241,13 +244,15 @@ def load_climate(state: Optional[str] = None) -> pd.DataFrame:
 
 
 def _sample_climate(state: Optional[str] = None) -> pd.DataFrame:
+    import hashlib
     import numpy as np
     states = [state] if state else ["GO", "MT", "MS"]
     months = pd.date_range("2024-01-01", periods=16, freq="MS")
     rows = []
     for s in states:
-        # Semente única por estado — dados diferentes por estado
-        rng = np.random.default_rng(abs(hash(s)) % (2 ** 31))
+        # Semente determinística por estado via md5 (evita hash() randômico do Python)
+        seed = int(hashlib.md5(s.encode()).hexdigest()[:8], 16)
+        rng = np.random.default_rng(seed)
         for m in months:
             month_n = m.month
             # Sazonalidade do Cerrado: seco (abr-set), chuvoso (out-mar)
@@ -289,6 +294,14 @@ def load_prices(product: Optional[str] = None) -> pd.DataFrame:
             {"product": product} if product else None,
         )
         df["reference_month"] = pd.to_datetime(df["reference_month"])
+
+        # Suplementa com sample data para produtos sem dados reais no DB
+        std_products = [product] if product else ["soja", "milho", "algodao"]
+        missing = [p for p in std_products if p not in df["product"].unique()]
+        if missing:
+            sample = _sample_prices(None)
+            for p in missing:
+                df = pd.concat([df, sample[sample["product"] == p]], ignore_index=True)
         return df
     except Exception:
         return _sample_prices(product)
