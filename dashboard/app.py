@@ -6,6 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="CerradoWatch",
@@ -206,9 +207,38 @@ with c4:
 # ---------------------------------------------------------------------------
 
 st.divider()
-generated = k.get("generated_at", "—")
+
+import pandas as _pd
+generated = k.get("generated_at", None)
+try:
+    ts = _pd.Timestamp(generated)
+    if ts.tzinfo is None:
+        ts = ts.tz_localize("UTC")
+    else:
+        ts = ts.tz_convert("UTC")
+    iso_utc = ts.isoformat()
+except Exception:
+    iso_utc = ""
+
+if iso_utc:
+    components.html(f"""
+<span id="cw-ts" style="color:#94a3b8;font-size:0.8rem;">🕐 Dados atualizados em: carregando...</span>
+<script>
+(function() {{
+    var dt = new Date("{iso_utc}");
+    var fmt = dt.toLocaleString(undefined, {{
+        day:"2-digit", month:"2-digit", year:"numeric",
+        hour:"2-digit", minute:"2-digit",
+        timeZoneName:"short"
+    }});
+    document.getElementById("cw-ts").textContent = "🕐 Dados atualizados em: " + fmt;
+}})();
+</script>
+""", height=28)
+else:
+    st.caption(f"🕐 Dados atualizados em: {generated or '—'}")
+
 st.caption(
-    f"🕐 Dados atualizados em: {generated} · "
     "Fonte: NASA FIRMS · INPE/PRODES · INMET · CONAB · "
     "Pipeline: [github.com/Vortex11PTBR/CerradoWatch](https://github.com/Vortex11PTBR/CerradoWatch)"
 )
