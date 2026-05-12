@@ -26,16 +26,16 @@ O Cerrado é o **segundo maior bioma do Brasil** — responsável por **70% da �
 |:-----------:|:---------------------------:|
 | ![Home](screenshots/home.png) | ![Queimadas](screenshots/queimadas-chart.png) |
 
-| Mapa de focos de calor (heatmap) | Desmatamento por estado |
-|:--------------------------------:|:-----------------------:|
+| Mapa de focos de calor | Desmatamento por estado |
+|:----------------------:|:-----------------------:|
 | ![Mapa](screenshots/mapa-calor.png) | ![Desmatamento](screenshots/desmatamento.png) |
 
-| Clima & risco de seca | Preços de commodities × correlação com desmatamento |
-|:---------------------:|:---------------------------------------------------:|
+| Clima & risco de seca | Preços × correlação com desmatamento |
+|:---------------------:|:------------------------------------:|
 | ![Clima](screenshots/clima.png) | ![Preços](screenshots/precos-correlacao.png) |
 
-| Arquitetura técnica completa |
-|:----------------------------:|
+| Arquitetura técnica |
+|:-------------------:|
 | ![Arquitetura](screenshots/arquitetura.png) |
 
 ---
@@ -61,13 +61,13 @@ GitHub Actions cron (toda segunda, 06h BRT)
 | Ingestão | Python 3.11 · requests · Pydantic | validação de schema na borda, upsert idempotente |
 | Warehouse | PostgreSQL — Neon.tech serverless | custo zero, branching nativo para CI |
 | Transformação | dbt-core · staging → mart | SQL testável, documentado e versionado |
-| Orquestração | GitHub Actions (cron semanal) | zero infra, auditável, gratuito |
+| Orquestração | GitHub Actions (cron semanal) | zero infra, auditável, sem custo operacional |
 | Visualização | Streamlit · Plotly · Folium | heatmap interativo, séries temporais, treemap |
 | Deploy | Streamlit Community Cloud + Neon | produção real sem custo operacional |
 
 ---
 
-## Dados & Fontes
+## Fontes de Dados
 
 | Domínio | Fonte | Granularidade |
 |---------|-------|--------------|
@@ -85,7 +85,7 @@ cerradowatch/
 ├── ingestion/        # conectores por fonte (firms / prodes / inmet / conab)
 ├── dbt/
 │   └── models/
-│       ├── staging/  # limpeza, tipagem, padronização de CID/códigos
+│       ├── staging/  # limpeza, tipagem e padronização dos dados brutos
 │       └── mart/     # tabelas analíticas finais com testes de qualidade
 ├── dashboard/        # Streamlit multi-page (Queimadas · Desmatamento · Clima · Preços · Sobre)
 ├── orchestration/    # pipeline runner + sistema de alertas por e-mail
@@ -96,29 +96,3 @@ cerradowatch/
 
 Desenvolvido por [João Lacerda](https://joaolacerda.dev) · Dados públicos: INPE · INMET · CONAB · NASA FIRMS
 
-
-## Screenshots
-
-| Home & KPIs | Queimadas — série histórica |
-|:-----------:|:---------------------------:|
-| ![Home](screenshots/home.png) | ![Queimadas](screenshots/queimadas-chart.png) |
-
-| Mapa de focos de calor | Desmatamento por estado |
-|:----------------------:|:-----------------------:|
-| ![Mapa](screenshots/mapa-calor.png) | ![Desmatamento](screenshots/desmatamento.png) |
-
-| Clima & risco de seca | Preços × desmatamento (correlação) |
-|:---------------------:|:----------------------------------:|
-| ![Clima](screenshots/clima.png) | ![Preços](screenshots/precos-correlacao.png) |
-
-| Arquitetura técnica |
-|:-------------------:|
-| ![Arquitetura](screenshots/arquitetura.png) |
-
----
-
-## O Problema
-
-O Cerrado é o **segundo maior bioma do Brasil** — responsável por **70% da água doce** do país — e está sendo destruído mais rapidamente que a Amazônia, com dez vezes menos visibilidade pública. Os dados existem: INPE, INMET, CONAB e NASA FIRMS os publicam continuamente. O problema é que estão dispersos, em formatos heterogêneos, sem qualquer camada analítica que os torne navegáveis.
-
-**CerradoWatch resolve isso com infraestrutura de dados real.**
