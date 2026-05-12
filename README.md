@@ -10,6 +10,24 @@
 
 🚀 **[Dashboard ao vivo → cerradowatch-g6wx9wwwr6mwydqvjwzyue.streamlit.app](https://cerradowatch-g6wx9wwwr6mwydqvjwzyue.streamlit.app)**
 
+## Screenshots
+
+| Home & KPIs | Queimadas — série histórica |
+|:-----------:|:---------------------------:|
+| ![Home](screenshots/home.png) | ![Queimadas](screenshots/queimadas-chart.png) |
+
+| Mapa de focos de calor | Desmatamento por estado |
+|:----------------------:|:-----------------------:|
+| ![Mapa](screenshots/mapa-calor.png) | ![Desmatamento](screenshots/desmatamento.png) |
+
+| Clima & risco de seca | Preços × desmatamento (correlação) |
+|:---------------------:|:----------------------------------:|
+| ![Clima](screenshots/clima.png) | ![Preços](screenshots/precos-correlacao.png) |
+
+| Arquitetura técnica |
+|:-------------------:|
+| ![Arquitetura](screenshots/arquitetura.png) |
+
 ## O Problema
 
 O Cerrado é o **segundo maior bioma do Brasil**, responsável por **70% da água doce** do país. Está sendo destruído mais rapidamente que a Amazônia — mas tem dez vezes menos visibilidade. Os dados de queimadas, desmatamento e impacto climático existem e são públicos (INPE, INMET, CONAB), mas estão dispersos, sujos e inacessíveis para quem não é cientista de dados.
