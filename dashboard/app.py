@@ -64,7 +64,7 @@ Plataforma de monitoramento ambiental do Cerrado com **dados abertos do governo 
 """)
     st.divider()
     st.caption("Dados: INPE · INMET · CONAB · NASA FIRMS")
-    st.caption("Pipeline: Python · dbt · PostgreSQL · GitHub Actions")
+    st.caption("Pipeline: Python · dbt · PostgreSQL · FastAPI · Docker · GitHub Actions")
 
 
 # ---------------------------------------------------------------------------
